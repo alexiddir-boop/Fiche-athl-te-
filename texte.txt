@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Judo Bilan">
+<meta name="theme-color" content="#002654">
+<title>Judo Bilan</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+/* ═══════════════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════════════ */
+:root {
+  --navy:   #002654;
+  --navy2:  #001a3a;
+  --navy-l: #e8edf5;
+  --red:    #CE1126;
+  --red-l:  #fdf0f1;
+  --red-b:  #f5b0b8;
+  --white:  #FFFFFF;
+  --green:       #1a6b3a;
+  --green-bg:    #edf7f2;
+  --green-brd:   #a8d5bb;
+  --amber:       #7a4800;
+  --amber-bg:    #fdf6e8;
+  --amber-brd:   #e8c97a;
+  --ink:    #111;
+  --ink2:   #2a2a2a;
+  --muted:  #7a7a7a;
+  --line:   #dde3ed;
+  --bg:     #edf0f5;
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ═══════════════════════════════════════
+SCREENS (vue unique)
+═══════════════════════════════════════ */
+.screen { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+.screen.active { display: flex; }
+
+/* ═══════════════════════════════════════
+ÉCRAN 1 — LISTE DES FICHES
+═══════════════════════════════════════ */
+#screen-list {
+background: var(–navy);
+}
+
+.list-header {
+padding: calc(var(–safe-top) + 20px) 20px 16px;
+background: var(–navy);
+flex-shrink: 0;
+}
+.list-logo {
+display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+}
+.list-flag {
+display: flex; height: 18px; border-radius: 2px; overflow: hidden; width: 28px; flex-shrink: 0;
+}
+.list-flag div { flex:1; }
+.lf-b { background: var(–navy); }
+.lf-w { background: white; }
+.lf-r { background: var(–red); }
+.list-brand {
+font-family: ‘Syne’, sans-serif; font-size: 11px; font-weight: 800;
+letter-spacing: 3px; text-transform: uppercase; color: #7a95bb;
+}
+.list-title {
+font-family: ‘Syne’, sans-serif; font-size: 26px; font-weight: 800;
+color: white; line-height: 1; margin-bottom: 4px;
+}
+.list-sub {
+font-size: 12px; color: #7a95bb;
+}
+
+.list-new-btn {
+width: 100%; background: var(–red); border: none; color: white;
+font-family: ‘Syne’, sans-serif; font-size: 13px; font-weight: 800;
+letter-spacing: 1px; text-transform: uppercase;
+padding: 16px; cursor: pointer;
+display: flex; align-items: center; justify-content: center; gap: 8px;
+flex-shrink: 0;
+transition: background .15s;
+}
+.list-new-btn:active { background: #a50e1e; }
+.list-new-btn span { font-size: 18px; font-weight: 300; }
+
+.list-scroll {
+flex: 1; overflow-y: auto; padding: 12px 16px 20px;
+-webkit-overflow-scrolling: touch;
+}
+
+.list-empty {
+text-align: center; padding: 60px 20px;
+color: #3a5a7a;
+}
+.list-empty-icon { font-size: 40px; margin-bottom: 12px; }
+.list-empty-text { font-family: ‘Syne’, sans-serif; font-size: 13px; font-weight: 700; color: #4a6a8a; margin-bottom: 6px; }
+.list-empty-sub { font-size: 12px; color: #3a5a7a; }
+
+.fiche-card {
+background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+border-radius: 8px; padding: 14px 16px;
+margin-bottom: 10px; cursor: pointer;
+display: flex; align-items: center; gap: 12px;
+transition: all .15s;
+-webkit-user-select: none; user-select: none;
+}
+.fiche-card:active { background: rgba(255,255,255,.12); }
+.fiche-card-left { flex: 1; min-width: 0; }
+.fiche-card-name {
+font-family: ‘Syne’, sans-serif; font-size: 15px; font-weight: 800;
+color: white; text-transform: uppercase;
+white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+margin-bottom: 4px;
+}
+.fiche-card-meta {
+font-size: 11px; color: #7a95bb;
+white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fiche-card-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.fiche-result-dot {
+width: 10px; height: 10px; border-radius: 50%;
+}
+.dot-or { background: #ffd700; }
+.dot-ar { background: #d8d8d8; }
+.dot-br { background: #d4a574; }
+.dot-5  { background: var(–green); }
+.dot-7  { background: #999; }
+.dot-el { background: var(–red); }
+
+.fiche-card-del {
+background: transparent; border: none; color: rgba(255,255,255,.25);
+font-size: 20px; cursor: pointer; padding: 4px; line-height: 1;
+transition: color .15s;
+}
+.fiche-card-del:active { color: var(–red); }
+
+.fiche-card-arrow { color: #4a6a8a; font-size: 16px; }
+
+/* ═══════════════════════════════════════
+ÉCRAN 2 — ÉDITEUR DE FICHE
+═══════════════════════════════════════ */
+#screen-edit {
+background: var(–bg);
+}
+
+.edit-topbar {
+background: var(–navy);
+padding: calc(var(–safe-top) + 10px) 16px 10px;
+display: flex; align-items: center; gap: 10px;
+flex-shrink: 0;
+}
+.edit-back {
+background: transparent; border: none; color: white;
+font-size: 22px; cursor: pointer; padding: 4px; line-height: 1;
+flex-shrink: 0;
+}
+.edit-topbar-title {
+font-family: ‘Syne’, sans-serif; font-size: 13px; font-weight: 800;
+letter-spacing: 1px; text-transform: uppercase; color: white;
+flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.edit-pdf-btn {
+background: var(–red); border: none; color: white;
+font-family: ‘Syne’, sans-serif; font-size: 11px; font-weight: 800;
+letter-spacing: 1px; text-transform: uppercase;
+padding: 8px 14px; border-radius: 2px; cursor: pointer;
+flex-shrink: 0; display: flex; align-items: center; gap: 5px;
+transition: background .15s;
+}
+.edit-pdf-btn:active { background: #a50e1e; }
+
+.edit-scroll {
+flex: 1; overflow-y: auto;
+-webkit-overflow-scrolling: touch;
+padding-bottom: 40px;
+}
+
+/* ── HEADER FICHE ── */
+.hd {
+background: var(–navy);
+position: relative;
+}
+.hd-stripe { display: flex; height: 4px; }
+.hd-stripe-b { flex:1; background: var(–navy); }
+.hd-stripe-w { flex:1; background: white; }
+.hd-stripe-r { flex:1; background: var(–red); }
+.hd-inner { padding: 14px 18px 12px; }
+.hd-eyebrow {
+font-family: ‘Syne’, sans-serif; font-size: 8px; font-weight: 600;
+letter-spacing: 3px; text-transform: uppercase; color: #7a95bb; margin-bottom: 4px;
+}
+.hd-name {
+font-family: ‘Syne’, sans-serif; font-size: 26px; font-weight: 800;
+line-height: 1; letter-spacing: -.5px;
+background: transparent; border: none;
+color: white; text-transform: uppercase; width: 100%;
+-webkit-appearance: none;
+}
+.hd-name:focus { outline: none; }
+.hd-name::placeholder { color: #3a5a7a; }
+.hd-row2 {
+display: flex; justify-content: space-between; align-items: flex-end;
+margin-top: 10px; gap: 12px;
+}
+.hd-fields { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+.hd-field-row { display: flex; align-items: center; gap: 6px; }
+.hd-field-row span { font-size: 12px; }
+.hd-field-row input {
+background: transparent; border: none; border-bottom: 1px solid #1a3a5e;
+color: #c0d0e0; font-family: ‘Inter’, sans-serif; font-size: 11px;
+padding: 2px 2px; flex: 1; min-width: 0;
+-webkit-appearance: none;
+}
+.hd-field-row input:focus { outline: none; border-color: #5a7aaa; }
+.hd-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.result-pill {
+font-family: ‘Syne’, sans-serif; font-size: 10px; font-weight: 800;
+letter-spacing: 1px; text-transform: uppercase; padding: 5px 12px; border-radius: 2px;
+}
+.res-or  { background: #ffd700; color: #3a2a00; }
+.res-ar  { background: #d8d8d8; color: #222; }
+.res-br  { background: #d4a574; color: #2a1000; }
+.res-5   { background: var(–green-bg); color: var(–green); border: 1px solid var(–green-brd); }
+.res-7   { background: #f0f0f0; color: #666; }
+.res-el  { background: var(–red-l); color: var(–red); border: 1px solid var(–red-b); }
+.result-pill select {
+appearance: none; background: transparent; border: none;
+font-family: ‘Syne’, sans-serif; font-size: 10px; font-weight: 800;
+letter-spacing: 1px; cursor: pointer; color: inherit; text-transform: uppercase;
+}
+.result-pill select:focus { outline: none; }
+.hd-comp-inputs { text-align: right; }
+.hd-comp-inputs input {
+background: transparent; border: none; border-bottom: 1px solid #1a3a5e;
+color: #7a95bb; font-family: ‘Inter’, sans-serif; font-size: 11px;
+text-align: right; display: block; margin-bottom: 3px;
+-webkit-appearance: none;
+}
+.hd-comp-inputs input:focus { outline: none; }
+
+/* ── BODY FICHE ── */
+.fiche-body { padding: 12px 14px 16px; background: white; }
+
+/* ── SECTION ── */
+.sec-label {
+font-family: ‘Syne’, sans-serif; font-size: 8px; font-weight: 700;
+letter-spacing: 3px; text-transform: uppercase; color: var(–navy);
+padding: 10px 0 7px; border-bottom: 2px solid var(–navy);
+margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+}
+.sec-label span { flex: 1; }
+.sec-add-btn {
+font-family: ‘Inter’, sans-serif; font-size: 10px; font-weight: 600;
+background: transparent; border: 1px solid var(–line);
+color: var(–muted); padding: 4px 12px; cursor: pointer;
+border-radius: 2px; transition: all .15s; text-transform: none; letter-spacing: 0;
+-webkit-appearance: none;
+}
+
+/* ═══════════════════════════════════════
+COMBAT CARD — mobile optimisée
+═══════════════════════════════════════ */
+.combat-card {
+margin-bottom: 12px; border-radius: 6px; overflow: hidden;
+box-shadow: 0 2px 8px rgba(0,38,84,.08);
+border: 1.5px solid var(–line);
+}
+.combat-card.cv { border-left: 4px solid var(–green); }
+.combat-card.cd { border-left: 4px solid var(–red); }
+.combat-card.cn { border-left: 4px solid var(–line); }
+
+.cc-head {
+display: flex; align-items: center; gap: 8px;
+padding: 10px 12px;
+border-bottom: 1px solid var(–line);
+}
+.cc-num-box {
+width: 26px; height: 26px; border-radius: 50%;
+background: var(–navy); color: white;
+display: flex; align-items: center; justify-content: center;
+font-family: ‘Syne’, sans-serif; font-size: 11px; font-weight: 800;
+flex-shrink: 0;
+}
+.cc-badge {
+font-family: ‘Syne’, sans-serif; font-size: 9px; font-weight: 800;
+letter-spacing: 1px; text-transform: uppercase;
+padding: 4px 10px; border-radius: 20px; white-space: nowrap;
+display: flex; align-items: center; flex-shrink: 0;
+}
+.ccb-v { background: var(–green-bg); color: var(–green); border: 1px solid var(–green-brd); }
+.ccb-d { background: var(–red-l); color: var(–red); border: 1px solid var(–red-b); }
+.ccb-n { background: #f0f0f0; color: #888; }
+.cc-badge select {
+appearance: none; background: transparent; border: none;
+font-family: ‘Syne’, sans-serif; font-size: 9px; font-weight: 800;
+letter-spacing: 1px; cursor: pointer; color: inherit; text-transform: uppercase;
+}
+.cc-badge select:focus { outline: none; }
+.cc-adv-input {
+background: transparent; border: none; border-bottom: 1px solid var(–line);
+font-family: ‘Inter’, sans-serif; font-size: 13px; font-weight: 500;
+color: var(–ink2); flex: 1; padding: 1px 2px; min-width: 0;
+}
+.cc-adv-input:focus { outline: none; border-color: var(–navy); }
+.cc-adv-input::placeholder { color: #ccc; }
+.cc-del {
+background: transparent; border: none; color: #ccc;
+cursor: pointer; font-size: 20px; padding: 0 2px; flex-shrink: 0;
+}
+
+/* Profil adversaire */
+.cc-profile {
+padding: 10px 12px;
+background: var(–navy-l);
+border-bottom: 1px solid var(–line);
+}
+.cc-profile-title {
+font-family: ‘Syne’, sans-serif; font-size: 8px; font-weight: 700;
+letter-spacing: 2px; text-transform: uppercase;
+color: var(–navy); margin-bottom: 8px;
+padding-bottom: 4px; border-bottom: 1.5px solid var(–navy);
+}
+.profile-rows { display: flex; flex-direction: column; gap: 0; }
+.profile-row {
+display: flex; align-items: center; gap: 8px;
+padding: 7px 0; border-bottom: 1px solid #c8d4e4;
+}
+.profile-row:last-child { border-bottom: none; padding-bottom: 0; }
+.profile-row:first-child { padding-top: 0; }
+.profile-key {
+font-size: 9px; color: var(–navy); width: 62px; flex-shrink: 0;
+font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+background: rgba(0,38,84,.07); padding: 2px 5px; border-radius: 2px;
+text-align: center;
+}
+.profile-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+.pchip {
+font-family: ‘Inter’, sans-serif; font-size: 10px; font-weight: 600;
+padding: 4px 10px; border-radius: 20px; cursor: pointer;
+border: 1px solid #b0c0d8; background: white; color: #4a6a8a;
+transition: all .12s; user-select: none;
+-webkit-user-select: none;
+}
+.pchip.active { background: var(–navy); color: white; border-color: var(–navy); }
+.profile-obs {
+width: 100%; background: transparent; border: none;
+border-bottom: 1px solid #b0c0d8;
+font-family: ‘Inter’, sans-serif; font-size: 11px; color: var(–ink2);
+margin-top: 8px; padding: 2px 2px;
+}
+.profile-obs:focus { outline: none; border-color: var(–navy); }
+.profile-obs::placeholder { color: #aab8cc; font-style: italic; }
+
+/* Scores — 2 colonnes */
+.cc-scores {
+display: grid; grid-template-columns: 1fr 1fr;
+border-bottom: 1px solid var(–line);
+}
+.cc-score-col { padding: 10px 12px; }
+.cc-score-col:first-child { border-right: 1px solid var(–line); }
+.score-col-title {
+font-family: ‘Syne’, sans-serif; font-size: 8px; font-weight: 800;
+letter-spacing: 2px; text-transform: uppercase;
+margin-bottom: 8px; padding-bottom: 4px;
+border-bottom: 2px solid currentColor;
+}
+.sct-m { color: var(–green); }
+.sct-c { color: var(–red); }
+.score-rows { display: flex; flex-direction: column; gap: 6px; }
+.score-row-item { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.score-row-label { font-size: 11px; color: var(–ink2); font-weight: 500; flex: 1; }
+.counter { display: flex; align-items: center; gap: 6px; }
+.cnt-btn {
+width: 28px; height: 28px; border: 1px solid var(–line);
+background: white; font-size: 16px; line-height: 1;
+cursor: pointer; border-radius: 4px; color: var(–muted);
+display: flex; align-items: center; justify-content: center;
+transition: all .1s; flex-shrink: 0;
+}
+.cnt-btn:active { background: var(–navy); color: white; border-color: var(–navy); }
+.cnt-val {
+font-family: ‘Syne’, sans-serif; font-size: 18px; font-weight: 800;
+min-width: 22px; text-align: center; line-height: 1;
+}
+.cv-g { color: var(–green); }
+.cv-r { color: var(–red); }
+.cv-a { color: var(–amber); }
+.cv-b { color: var(–navy); }
+
+/* Observations */
+.cc-analysis {
+display: grid; grid-template-columns: 1fr 1fr;
+border-bottom: 1px solid var(–line);
+}
+.cc-ana-half { padding: 9px 12px; }
+.cc-ana-half:first-child { border-right: 1px solid var(–line); }
+.ana-title {
+font-family: ‘Syne’, sans-serif; font-size: 8px; font-weight: 800;
+letter-spacing: 2px; text-transform: uppercase;
+margin-bottom: 6px; padding-bottom: 4px;
+border-bottom: 1.5px solid currentColor;
+}
+.ana-pos { color: var(–green); }
+.ana-neg { color: var(–red); }
+.mini-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; }
+.mini-item { display: flex; align-items: flex-start; gap: 5px; }
+.mini-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+.md-pos { background: var(–green); }
+.md-neg { background: var(–red); }
+.mini-item input {
+background: transparent; border: none; border-bottom: 1px solid transparent;
+font-family: ‘Inter’, sans-serif; font-size: 12px; color: var(–ink2); width: 100%;
+line-height: 1.5; padding: 1px 0;
+}
+.mini-item input:focus { outline: none; border-color: var(–line); }
+.mini-item input::placeholder { color: #ccc; font-style: italic; }
+.mini-add {
+font-size: 11px; background: transparent; border: none; cursor: pointer;
+font-family: ‘Inter’, sans-serif; opacity: .4;
+display: flex; align-items: center; gap: 3px; padding: 2px 0; margin-top: 2px;
+}
+.ma-pos { color: var(–green); }
+.ma-neg { color: var(–red); }
+
+/* À travailler */
+.cc-work {
+display: grid; grid-template-columns: 1fr 1fr 1fr;
+background: #f8f9fc;
+}
+.cc-work-col { padding: 8px 10px; border-right: 1px solid var(–line); }
+.cc-work-col:last-child { border-right: none; }
+.work-title {
+font-family: ‘Syne’, sans-serif; font-size: 7px; font-weight: 700;
+letter-spacing: 2px; text-transform: uppercase;
+margin-bottom: 5px; padding-bottom: 4px; border-bottom: 1px solid var(–line);
+display: flex; align-items: center; gap: 4px; color: var(–ink2);
+}
+.wdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.wd-t { background: var(–red); }
+.wd-a { background: var(–navy); }
+.wd-m { background: #5a1a8a; }
+.wmini-list { display: flex; flex-direction: column; gap: 3px; margin-bottom: 3px; }
+.wmini-item { display: flex; align-items: flex-start; gap: 4px; }
+.wmini-n { font-family: ‘Syne’, sans-serif; font-size: 8px; font-weight: 700; color: var(–muted); min-width: 12px; margin-top: 3px; }
+.wmini-item input {
+background: transparent; border: none; border-bottom: 1px solid transparent;
+font-family: ‘Inter’, sans-serif; font-size: 11px; color: var(–ink2); width: 100%; line-height: 1.5;
+}
+.wmini-item input:focus { outline: none; border-color: var(–line); }
+.wmini-item input::placeholder { color: #ccc; font-style: italic; }
+.wmini-add {
+font-size: 10px; background: transparent; border: none; cursor: pointer;
+font-family: ‘Inter’, sans-serif; color: var(–muted); opacity: .4;
+display: flex; align-items: center; gap: 3px; padding: 1px 0;
+}
+
+/* Priorités */
+.priority-block {
+border: 2px solid var(–navy); border-radius: 6px; overflow: hidden;
+margin-top: 4px; margin-bottom: 12px;
+}
+.priority-header { background: var(–navy); padding: 9px 14px; }
+.priority-title {
+font-family: ‘Syne’, sans-serif; font-size: 11px; font-weight: 800;
+letter-spacing: 2px; text-transform: uppercase; color: white;
+}
+.priority-accent { height: 3px; background: var(–red); }
+.priority-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+.prio-item {
+display: flex; align-items: center; gap: 10px;
+padding: 8px 10px; border-radius: 4px; border-left: 4px solid; background: #f8f9fc;
+}
+.prio-item-1 { border-color: var(–red); }
+.prio-item-2 { border-color: var(–amber); }
+.prio-item-3 { border-color: var(–navy); }
+.prio-num {
+font-family: ‘Syne’, sans-serif; font-size: 17px; font-weight: 800;
+line-height: 1; flex-shrink: 0; min-width: 18px; text-align: center;
+}
+.pn-1 { color: var(–red); }
+.pn-2 { color: var(–amber); }
+.pn-3 { color: var(–navy); }
+.prio-item input {
+background: transparent; border: none;
+font-family: ‘Inter’, sans-serif; font-size: 13px; font-weight: 500;
+color: var(–ink2); width: 100%; padding: 0; line-height: 1.4;
+}
+.prio-item input:focus { outline: none; }
+.prio-item input::placeholder { color: #bbb; font-style: italic; font-weight: 400; }
+.prio-del {
+background: transparent; border: none; color: #ccc;
+cursor: pointer; font-size: 18px; padding: 0; flex-shrink: 0;
+}
+.prio-add-btn {
+font-family: ‘Inter’, sans-serif; font-size: 11px; font-weight: 600;
+background: transparent; border: 1px dashed var(–line);
+color: var(–muted); padding: 8px 14px; cursor: pointer;
+border-radius: 4px; text-align: center; width: 100%;
+margin-bottom: 10px;
+}
+
+/* Note coach */
+.coach-row {
+background: var(–amber-bg); border: 1.5px solid var(–amber-brd);
+border-radius: 4px; padding: 10px 12px;
+display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px;
+}
+.coach-label {
+font-family: ‘Syne’, sans-serif; font-size: 8px; font-weight: 700;
+letter-spacing: 2px; text-transform: uppercase; color: var(–amber);
+white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.coach-input {
+flex: 1; background: transparent; border: none;
+font-family: ‘Inter’, sans-serif; font-size: 13px; line-height: 1.6;
+color: var(–ink2); resize: none; width: 100%; min-height: 40px;
+}
+.coach-input:focus { outline: none; }
+.coach-input::placeholder { color: #c8b880; font-style: italic; }
+
+/* ── TOAST ── */
+.toast {
+position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+background: var(–navy); color: white;
+font-family: ‘Syne’, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1px;
+padding: 12px 24px; border-radius: 30px;
+transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+z-index: 1000; pointer-events: none; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── MODAL SUPPR ── */
+.modal-overlay {
+display: none; position: fixed; inset: 0;
+background: rgba(0,0,0,.5); z-index: 200;
+align-items: center; justify-content: center; padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+background: white; border-radius: 10px; padding: 24px 20px;
+max-width: 320px; width: 100%; text-align: center;
+}
+.modal-title {
+font-family: ‘Syne’, sans-serif; font-size: 16px; font-weight: 800;
+color: var(–navy); margin-bottom: 8px;
+}
+.modal-text { font-size: 13px; color: var(–muted); margin-bottom: 20px; line-height: 1.5; }
+.modal-btns { display: flex; gap: 10px; }
+.modal-btn {
+flex: 1; padding: 12px; border-radius: 4px; border: none;
+font-family: ‘Syne’, sans-serif; font-size: 12px; font-weight: 800;
+letter-spacing: 1px; text-transform: uppercase; cursor: pointer;
+}
+.modal-btn-cancel { background: #f0f0f0; color: var(–muted); }
+.modal-btn-confirm { background: var(–red); color: white; }
+
+/* ── LOADING ── */
+.loading-overlay {
+display: none; position: fixed; inset: 0;
+background: rgba(0,38,84,.85); z-index: 300;
+align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+}
+.loading-overlay.active { display: flex; }
+.loading-spinner {
+width: 40px; height: 40px; border: 3px solid rgba(255,255,255,.2);
+border-top-color: white; border-radius: 50%;
+animation: spin .8s linear infinite;
+}
+.loading-text {
+font-family: ‘Syne’, sans-serif; font-size: 12px; font-weight: 700;
+letter-spacing: 2px; text-transform: uppercase; color: white;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════════════
+PRINT / PDF
+═══════════════════════════════════════ */
+@media print {
+body { overflow: visible; height: auto; }
+#screen-list { display: none !important; }
+#screen-edit { display: block !important; height: auto; overflow: visible; }
+.edit-topbar { display: none !important; }
+.edit-scroll { overflow: visible; }
+.sec-add-btn, .cc-del, .mini-add, .wmini-add, .prio-add-btn, .prio-del { display: none !important; }
+.fiche-body { padding: 10px 14px; }
+}
+</style>
+
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     ÉCRAN 1 : LISTE
+═══════════════════════════════════════ -->
+
+<div id="screen-list" class="screen active">
+  <div class="list-header">
+    <div class="list-logo">
+      <div class="list-flag">
+        <div class="lf-b"></div>
+        <div class="lf-w"></div>
+        <div class="lf-r"></div>
+      </div>
+      <span class="list-brand">France Judo</span>
+    </div>
+    <div class="list-title">Fiches Bilan</div>
+    <div class="list-sub">Compétition · Analyse individuelle</div>
+  </div>
+
+  <button class="list-new-btn" onclick="newFiche()">
+    <span>＋</span> Nouvelle fiche
+  </button>
+
+  <div class="list-scroll" id="list-scroll">
+    <div class="list-empty" id="list-empty">
+      <div class="list-empty-icon">🥋</div>
+      <div class="list-empty-text">Aucune fiche</div>
+      <div class="list-empty-sub">Appuie sur "Nouvelle fiche" pour commencer</div>
+    </div>
+    <div id="list-items"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     ÉCRAN 2 : ÉDITEUR
+═══════════════════════════════════════ -->
+
+<div id="screen-edit" class="screen">
+  <div class="edit-topbar">
+    <button class="edit-back" onclick="goBack()">‹</button>
+    <div class="edit-topbar-title" id="topbar-title">Nouvelle fiche</div>
+    <button class="edit-pdf-btn" onclick="exportPDF()">
+      📄 PDF
+    </button>
+  </div>
+
+  <div class="edit-scroll" id="edit-scroll">
+    <div id="fiche-content">
+      <!-- généré dynamiquement -->
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+
+<div class="toast" id="toast"></div>
+
+<!-- MODAL SUPPRESSION -->
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">Supprimer la fiche ?</div>
+    <div class="modal-text">Cette action est irréversible.</div>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="modal-btn modal-btn-confirm" id="modal-confirm-btn">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Génération PDF…</div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   STORAGE
+═══════════════════════════════════════ */
+const STORAGE_KEY = 'judo_fiches_v1';
+
+function loadFiches() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e) { return []; }
+}
+function saveFiches(fiches) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(fiches));
+}
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+/* ═══════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════ */
+let currentFicheId = null;
+let pendingDeleteId = null;
+let combatCount = 0;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goBack() {
+  saveCurrent();
+  showScreen('screen-list');
+  renderList();
+}
+
+/* ═══════════════════════════════════════
+   LISTE
+═══════════════════════════════════════ */
+const RESULT_LABELS = {or:'🥇 Or',ar:'🥈 Argent',br:'🥉 Bronze','5':'5e','7':'7e',el:'Élim.'};
+const RESULT_DOTS = {or:'dot-or',ar:'dot-ar',br:'dot-br','5':'dot-5','7':'dot-7',el:'dot-el'};
+
+function renderList() {
+  const fiches = loadFiches();
+  const container = document.getElementById('list-items');
+  const empty = document.getElementById('list-empty');
+  container.innerHTML = '';
+
+  if (!fiches.length) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  // Plus récent en premier
+  [...fiches].reverse().forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'fiche-card';
+    const dotClass = RESULT_DOTS[f.result] || 'dot-el';
+    const name = f.name || 'Sans nom';
+    const meta = [f.comp, f.date].filter(Boolean).join(' · ') || 'Compétition non renseignée';
+    card.innerHTML = `
+      <div class="fiche-card-left">
+        <div class="fiche-card-name">${escHtml(name)}</div>
+        <div class="fiche-card-meta">${escHtml(meta)}</div>
+      </div>
+      <div class="fiche-card-right">
+        <div class="fiche-result-dot ${dotClass}"></div>
+        <button class="fiche-card-del" onclick="confirmDelete(event,'${f.id}')">×</button>
+        <div class="fiche-card-arrow">›</div>
+      </div>`;
+    card.addEventListener('click', () => openFiche(f.id));
+    container.appendChild(card);
+  });
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ═══════════════════════════════════════
+   NOUVELLE FICHE / OUVRIR
+═══════════════════════════════════════ */
+function newFiche() {
+  const id = genId();
+  const fiches = loadFiches();
+  fiches.push({ id, name:'', cat:'', club:'', grade:'', comp:'', date:'', result:'el', combats:[], prios:[], coach:'' });
+  saveFiches(fiches);
+  openFiche(id);
+}
+
+function openFiche(id) {
+  currentFicheId = id;
+  const fiches = loadFiches();
+  const f = fiches.find(x => x.id === id);
+  if (!f) return;
+  combatCount = 0;
+  renderFiche(f);
+  showScreen('screen-edit');
+  document.getElementById('edit-scroll').scrollTop = 0;
+}
+
+/* ═══════════════════════════════════════
+   RENDU FICHE
+═══════════════════════════════════════ */
+const RESULTS_OPTS = [
+  {v:'or',l:"🥇 Or"},{v:'ar',l:"🥈 Argent"},{v:'br',l:"🥉 Bronze"},
+  {v:'5',l:"5e place"},{v:'7',l:"7e place"},{v:'el',l:"Éliminé(e)"},
+];
+
+function renderFiche(f) {
+  const resOpts = RESULTS_OPTS.map(r=>`<option value="${r.v}"${f.result===r.v?' selected':''}>${r.l}</option>`).join('');
+  const resCls = {or:'res-or',ar:'res-ar',br:'res-br','5':'res-5','7':'res-7',el:'res-el'};
+  const pillCls = resCls[f.result] || 'res-el';
+
+  const html = `
+    <div class="hd">
+      <div class="hd-stripe"><div class="hd-stripe-b"></div><div class="hd-stripe-w"></div><div class="hd-stripe-r"></div></div>
+      <div class="hd-inner">
+        <div class="hd-eyebrow">Fiche bilan individuel · Compétition</div>
+        <input class="hd-name" placeholder="NOM Prénom" id="f-name" value="${escHtml(f.name)}" oninput="autoSave()">
+        <div class="hd-row2">
+          <div class="hd-fields">
+            <div class="hd-field-row"><span>⚖️</span><input placeholder="Catégorie" id="f-cat" value="${escHtml(f.cat)}" oninput="autoSave()"></div>
+            <div class="hd-field-row"><span>🏢</span><input placeholder="Club" id="f-club" value="${escHtml(f.club)}" oninput="autoSave()"></div>
+            <div class="hd-field-row"><span>🎽</span><input placeholder="Grade" id="f-grade" value="${escHtml(f.grade)}" oninput="autoSave()"></div>
+          </div>
+          <div class="hd-right">
+            <div class="result-pill ${pillCls}" id="f-rpill">
+              <select id="f-result" onchange="onResultChange(this)">${resOpts}</select>
+            </div>
+            <div class="hd-comp-inputs">
+              <input placeholder="Compétition" id="f-comp" value="${escHtml(f.comp)}" oninput="autoSave()">
+              <input placeholder="Date · Lieu" id="f-date" value="${escHtml(f.date)}" oninput="autoSave()">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fiche-body" id="fiche-body">
+      <div class="sec-label">
+        <span>Combats</span>
+        <button class="sec-add-btn" onclick="addCombat()">+ Combat</button>
+      </div>
+      <div id="combats-container"></div>
+
+      <div class="sec-label" style="margin-top:6px"><span>Priorités de travail</span></div>
+      <div class="priority-block">
+        <div class="priority-header"><span class="priority-title">⚡ Plan d'action prioritaire</span></div>
+        <div class="priority-accent"></div>
+        <div class="priority-body" id="prio-body"></div>
+        <button class="prio-add-btn" onclick="addPrio()">+ Ajouter une priorité</button>
+      </div>
+
+      <div class="coach-row">
+        <div class="coach-label">Note<br>Coach</div>
+        <textarea class="coach-input" rows="3" placeholder="Contexte, ressenti, points à discuter avec l'athlète…" id="f-coach" oninput="autoSave()">${escHtml(f.coach)}</textarea>
+
+```
+  </div>
+</div>`;
+```
+
+document.getElementById(‘fiche-content’).innerHTML = html;
+document.getElementById(‘topbar-title’).textContent = f.name || ‘Nouvelle fiche’;
+
+// Reconstruire les combats
+(f.combats || []).forEach(c => addCombat(c));
+// Reconstruire les priorités
+(f.prios || []).forEach(p => addPrio(p));
+}
+
+/* ═══════════════════════════════════════
+RÉSULTAT
+═══════════════════════════════════════ */
+function onResultChange(sel) {
+const cls = {or:‘res-or’,ar:‘res-ar’,br:‘res-br’,‘5’:‘res-5’,‘7’:‘res-7’,el:‘res-el’};
+document.getElementById(‘f-rpill’).className = ’result-pill ’+(cls[sel.value]||‘res-el’);
+autoSave();
+}
+
+/* ═══════════════════════════════════════
+COMBAT
+═══════════════════════════════════════ */
+function addCombat(data) {
+combatCount++;
+const n = combatCount;
+const cid = ‘cc’+n;
+
+function chips(list, group) {
+return list.map(c => {
+const isActive = data && data.chips && data.chips.includes(c) ? ’ active’ : ‘’;
+return `<span class="pchip${isActive}" onclick="toggleChip(this,'${group}')">${c}</span>`;
+}).join(’’);
+}
+
+const card = document.createElement(‘div’);
+const resultVal = data ? data.result : ‘’;
+const cardCls = resultVal===‘V’ ? ‘combat-card cv’ : resultVal===‘D’ ? ‘combat-card cd’ : ‘combat-card cn’;
+const badgeCls = resultVal===‘V’ ? ‘cc-badge ccb-v’ : resultVal===‘D’ ? ‘cc-badge ccb-d’ : ‘cc-badge ccb-n’;
+card.className = cardCls; card.id = cid;
+
+card.innerHTML = `
+
+<div class="cc-head">
+  <div class="cc-num-box">${n}</div>
+  <div class="${badgeCls}" id="ccb_${cid}">
+    <select onchange="paintCombat(this,'${cid}')">
+      <option value=""${!resultVal?' selected':''}>—</option>
+      <option value="V"${resultVal==='V'?' selected':''}>Victoire</option>
+      <option value="D"${resultVal==='D'?' selected':''}>Défaite</option>
+    </select>
+  </div>
+  <input class="cc-adv-input" placeholder="NOM Adversaire · Pays / Club" id="adv_${cid}" value="${escHtml(data&&data.adv||'')}" oninput="autoSave()">
+  <button class="cc-del" onclick="deleteCombat('${cid}')">×</button>
+</div>
+
+<div class="cc-profile">
+  <div class="cc-profile-title">Profil adversaire</div>
+  <div class="profile-rows">
+    <div class="profile-row">
+      <span class="profile-key">Latéralité</span>
+      <div class="profile-chips">${chips(['Droitier','Gaucher'],'lat_'+cid)}</div>
+    </div>
+    <div class="profile-row">
+      <span class="profile-key">Garde</span>
+      <div class="profile-chips">${chips(['Basse','Haute','Triceps','Croisée'],'garde_'+cid)}</div>
+    </div>
+    <div class="profile-row">
+      <span class="profile-key">Profil</span>
+      <div class="profile-chips">${chips(['Offensif','Tactique'],'profil_'+cid)}</div>
+    </div>
+  </div>
+  <input class="profile-obs" placeholder="Technique principale, particularité…" id="styleobs_${cid}" value="${escHtml(data&&data.styleobs||'')}" oninput="autoSave()">
+</div>
+
+<div class="cc-scores">
+  <div class="cc-score-col">
+    <div class="score-col-title sct-m">✓ Marqués</div>
+    <div class="score-rows">
+      ${sr('Ippon','im_'+cid,'cv-g',data&&data.im||0)}
+      ${sr('Waza-ari','wm_'+cid,'cv-g',data&&data.wm||0)}
+      ${sr('Yuko','ym_'+cid,'cv-b',data&&data.ym||0)}
+      ${sr('Shido adv.','pm_'+cid,'cv-a',data&&data.pm||0)}
+    </div>
+  </div>
+  <div class="cc-score-col">
+    <div class="score-col-title sct-c">✕ Concédés</div>
+    <div class="score-rows">
+      ${sr('Ippon','ic_'+cid,'cv-r',data&&data.ic||0)}
+      ${sr('Waza-ari','wc_'+cid,'cv-r',data&&data.wc||0)}
+      ${sr('Yuko','yc_'+cid,'cv-r',data&&data.yc||0)}
+      ${sr('Shido','sc_'+cid,'cv-a',data&&data.sc||0)}
+    </div>
+  </div>
+</div>
+
+<div class="cc-analysis">
+  <div class="cc-ana-half">
+    <div class="ana-title ana-pos">✓ Ce qui a bien marché</div>
+    <div class="mini-list" id="pos_${cid}"></div>
+    <button class="mini-add ma-pos" onclick="addMiniObs('${cid}','pos')">＋ Ajouter</button>
+  </div>
+  <div class="cc-ana-half">
+    <div class="ana-title ana-neg">✕ Ce qui a moins bien marché</div>
+    <div class="mini-list" id="neg_${cid}"></div>
+    <button class="mini-add ma-neg" onclick="addMiniObs('${cid}','neg')">＋ Ajouter</button>
+  </div>
+</div>
+
+<div class="cc-work">
+  <div class="cc-work-col">
+    <div class="work-title"><div class="wdot wd-t"></div>Technique</div>
+    <div class="wmini-list" id="wt_${cid}"></div>
+    <button class="wmini-add" onclick="addMiniWork('${cid}','t')">＋</button>
+  </div>
+  <div class="cc-work-col">
+    <div class="work-title"><div class="wdot wd-a"></div>Tactique</div>
+    <div class="wmini-list" id="wta_${cid}"></div>
+    <button class="wmini-add" onclick="addMiniWork('${cid}','ta')">＋</button>
+  </div>
+  <div class="cc-work-col">
+    <div class="work-title"><div class="wdot wd-m"></div>Mental</div>
+    <div class="wmini-list" id="wm_${cid}"></div>
+    <button class="wmini-add" onclick="addMiniWork('${cid}','m')">＋</button>
+  </div>
+</div>`;
+
+document.getElementById(‘combats-container’).appendChild(card);
+
+// Remplir observations
+if (data) {
+(data.pos||[]).forEach(t => addMiniObs(cid,‘pos’,t));
+(data.neg||[]).forEach(t => addMiniObs(cid,‘neg’,t));
+(data.wt||[]).forEach(t  => addMiniWork(cid,‘t’,t));
+(data.wta||[]).forEach(t => addMiniWork(cid,‘ta’,t));
+(data.wm||[]).forEach(t  => addMiniWork(cid,‘m’,t));
+}
+}
+
+function sr(label, id, cls, val) {
+return `<div class="score-row-item">
+<span class="score-row-label">${label}</span>
+<div class="counter">
+<button class="cnt-btn" onclick="decr('${id}')">−</button>
+<span class="cnt-val ${cls}" id="${id}">${val||0}</span>
+<button class="cnt-btn" onclick="incr('${id}')">+</button>
+</div>
+
+  </div>`;
+}
+
+function incr(id) { const e=document.getElementById(id); e.textContent=parseInt(e.textContent||0)+1; autoSave(); }
+function decr(id) { const e=document.getElementById(id); const v=parseInt(e.textContent||0); if(v>0){e.textContent=v-1; autoSave();} }
+
+function paintCombat(sel, cid) {
+const badge = document.getElementById(‘ccb_’+cid);
+const card  = document.getElementById(cid);
+if (sel.value===‘V’) { badge.className=‘cc-badge ccb-v’; card.className=‘combat-card cv’; }
+else if (sel.value===‘D’) { badge.className=‘cc-badge ccb-d’; card.className=‘combat-card cd’; }
+else { badge.className=‘cc-badge ccb-n’; card.className=‘combat-card cn’; }
+autoSave();
+}
+
+function deleteCombat(cid) {
+const el = document.getElementById(cid);
+if (el) el.remove();
+autoSave();
+}
+
+function toggleChip(el, group) {
+if (group.startsWith(‘lat’)) {
+el.closest(’.profile-chips’).querySelectorAll(’.pchip’).forEach(c=>c.classList.remove(‘active’));
+}
+el.classList.toggle(‘active’);
+autoSave();
+}
+
+function addMiniObs(cid, type, val=’’) {
+const c = document.getElementById(type+’_’+cid);
+if (!c) return;
+const item = document.createElement(‘div’); item.className=‘mini-item’;
+item.innerHTML = `<div class="mini-dot ${type==='pos'?'md-pos':'md-neg'}"></div><input placeholder="Observation…" value="${escHtml(val)}" oninput="autoSave()">`;
+c.appendChild(item);
+if (!val) { setTimeout(()=>item.querySelector(‘input’).focus(), 50); }
+}
+
+function addMiniWork(cid, col, val=’’) {
+const c = document.getElementById(‘w’+col+’_’+cid);
+if (!c) return;
+const n = c.querySelectorAll(’.wmini-item’).length+1;
+const item = document.createElement(‘div’); item.className=‘wmini-item’;
+item.innerHTML = `<span class="wmini-n">${n}.</span><input placeholder="À travailler…" value="${escHtml(val)}" oninput="autoSave()">`;
+c.appendChild(item);
+if (!val) { setTimeout(()=>item.querySelector(‘input’).focus(), 50); }
+}
+
+/* ═══════════════════════════════════════
+PRIORITÉS
+═══════════════════════════════════════ */
+function addPrio(val=’’) {
+const body = document.getElementById(‘prio-body’);
+if (!body) return;
+const n = body.querySelectorAll(’.prio-item’).length + 1;
+const level = n<=3 ? n : ((n-1)%3)+1;
+const item = document.createElement(‘div’);
+item.className = `prio-item prio-item-${level}`;
+item.innerHTML = `<span class="prio-num pn-${level}">${n}</span><input placeholder="Priorité de travail…" value="${escHtml(val)}" oninput="autoSave()"><button class="prio-del" onclick="this.closest('.prio-item').remove(); reNumPrios(); autoSave();">×</button>`;
+body.appendChild(item);
+if (!val) { setTimeout(()=>item.querySelector(‘input’).focus(), 50); }
+}
+
+function reNumPrios() {
+const body = document.getElementById(‘prio-body’);
+if (!body) return;
+body.querySelectorAll(’.prio-item’).forEach((item, i) => {
+const n = i+1; const level = n<=3 ? n : ((n-1)%3)+1;
+item.className = `prio-item prio-item-${level}`;
+item.querySelector(’.prio-num’).className = `prio-num pn-${level}`;
+item.querySelector(’.prio-num’).textContent = n;
+});
+}
+
+/* ═══════════════════════════════════════
+SAUVEGARDE AUTOMATIQUE
+═══════════════════════════════════════ */
+let saveTimer = null;
+function autoSave() {
+clearTimeout(saveTimer);
+saveTimer = setTimeout(saveCurrent, 600);
+// Mettre à jour le titre topbar
+const nameEl = document.getElementById(‘f-name’);
+if (nameEl) document.getElementById(‘topbar-title’).textContent = nameEl.value || ‘Nouvelle fiche’;
+}
+
+function saveCurrent() {
+if (!currentFicheId) return;
+const fiches = loadFiches();
+const idx = fiches.findIndex(x => x.id === currentFicheId);
+if (idx === -1) return;
+
+const get = id => { const el = document.getElementById(id); return el ? el.value : ‘’; };
+
+// Récupérer combats
+const combats = [];
+document.querySelectorAll(’#combats-container .combat-card’).forEach(card => {
+const cid = card.id;
+const sel = card.querySelector(‘select’);
+const chips = [];
+card.querySelectorAll(’.pchip.active’).forEach(c => chips.push(c.textContent));
+
+```
+const getScore = k => parseInt(document.getElementById(k+'_'+cid)?.textContent||0);
+const getList = listId => {
+  const arr = [];
+  document.querySelectorAll('#'+listId+' input').forEach(i => { if(i.value) arr.push(i.value); });
+  return arr;
+};
+
+combats.push({
+  result: sel ? sel.value : '',
+  adv: get('adv_'+cid),
+  styleobs: get('styleobs_'+cid),
+  chips,
+  im: getScore('im'), wm: getScore('wm'), ym: getScore('ym'), pm: getScore('pm'),
+  ic: getScore('ic'), wc: getScore('wc'), yc: getScore('yc'), sc: getScore('sc'),
+  pos: getList('pos_'+cid), neg: getList('neg_'+cid),
+  wt: getList('wt_'+cid), wta: getList('wta_'+cid), wm: getList('wm_'+cid),
+});
+```
+
+});
+
+// Priorités
+const prios = [];
+document.querySelectorAll(’#prio-body .prio-item input’).forEach(i => { if(i.value) prios.push(i.value); });
+
+fiches[idx] = {
+…fiches[idx],
+name: get(‘f-name’),
+cat: get(‘f-cat’),
+club: get(‘f-club’),
+grade: get(‘f-grade’),
+comp: get(‘f-comp’),
+date: get(‘f-date’),
+result: get(‘f-result’) || ‘el’,
+coach: get(‘f-coach’),
+combats,
+prios,
+updatedAt: Date.now(),
+};
+
+saveFiches(fiches);
+}
+
+/* ═══════════════════════════════════════
+SUPPRESSION
+═══════════════════════════════════════ */
+function confirmDelete(e, id) {
+e.stopPropagation();
+pendingDeleteId = id;
+document.getElementById(‘modal-overlay’).classList.add(‘active’);
+document.getElementById(‘modal-confirm-btn’).onclick = () => {
+const fiches = loadFiches().filter(f => f.id !== pendingDeleteId);
+saveFiches(fiches);
+closeModal();
+renderList();
+showToast(‘Fiche supprimée’);
+};
+}
+function closeModal() {
+document.getElementById(‘modal-overlay’).classList.remove(‘active’);
+pendingDeleteId = null;
+}
+
+/* ═══════════════════════════════════════
+EXPORT PDF
+═══════════════════════════════════════ */
+function exportPDF() {
+saveCurrent();
+const fiches = loadFiches();
+const f = fiches.find(x => x.id === currentFicheId);
+const filename = (f && f.name ? f.name.replace(/\s+/g,’_’) : ‘fiche’) + ‘_judo_bilan.pdf’;
+
+document.getElementById(‘loading-overlay’).classList.add(‘active’);
+
+const el = document.getElementById(‘fiche-content’);
+const opt = {
+margin: 0,
+filename,
+image: { type:‘jpeg’, quality:0.97 },
+html2canvas: { scale:2, useCORS:true, logging:false },
+jsPDF: { unit:‘mm’, format:‘a4’, orientation:‘portrait’ },
+pagebreak: { mode: ‘avoid-all’ }
+};
+
+html2pdf().set(opt).from(el).save().then(() => {
+document.getElementById(‘loading-overlay’).classList.remove(‘active’);
+showToast(‘PDF exporté ✓’);
+}).catch(() => {
+document.getElementById(‘loading-overlay’).classList.remove(‘active’);
+showToast(‘Erreur export PDF’);
+});
+}
+
+/* ═══════════════════════════════════════
+TOAST
+═══════════════════════════════════════ */
+let toastTimer = null;
+function showToast(msg) {
+const t = document.getElementById(‘toast’);
+t.textContent = msg;
+t.classList.add(‘show’);
+clearTimeout(toastTimer);
+toastTimer = setTimeout(() => t.classList.remove(‘show’), 2200);
+}
+
+/* ═══════════════════════════════════════
+PWA SERVICE WORKER (inline)
+═══════════════════════════════════════ */
+if (‘serviceWorker’ in navigator) {
+const swCode = `self.addEventListener('install', e => self.skipWaiting()); self.addEventListener('activate', e => clients.claim()); self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));`;
+const blob = new Blob([swCode], {type:‘application/javascript’});
+const swUrl = URL.createObjectURL(blob);
+navigator.serviceWorker.register(swUrl).catch(()=>{});
+}
+
+/* ═══════════════════════════════════════
+INIT
+═══════════════════════════════════════ */
+renderList();
+</script>
+
+</body>
+</html>
